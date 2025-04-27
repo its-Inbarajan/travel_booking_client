@@ -11,25 +11,29 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <>
       <main
-        className={`dark:bg-gray-900 grid grid-cols-1 md:grid-cols-12 min-h-dvh ${
-          hiddenPath.includes(pathname) && "hidden"
+        className={`${
+          hiddenPath.includes(pathname)
+            ? "block dark:bg-gray-900 min-h-dvh"
+            : "dark:bg-gray-900 grid grid-cols-1 md:grid-cols-12 min-h-dvh "
         }`}
       >
-        <header className="col-span-1 md:col-span-12 fixed w-full">
-          <Navbar />
-        </header>
+        {!hiddenPath.includes(pathname) && (
+          <header className="col-span-1 md:col-span-12 fixed w-full">
+            <Navbar />
+          </header>
+        )}
 
-        <aside className="hidden md:block mt-14 md:col-span-4 lg:col-span-3 xl:col-span-2">
-          <Sidebar />
-        </aside>
+        {!hiddenPath.includes(pathname) && (
+          <aside className="hidden md:block mt-14 md:col-span-4 lg:col-span-3 xl:col-span-2">
+            <Sidebar />
+          </aside>
+        )}
+        <section
+          className={`col-span-1 overflow-auto  px-8 py-4 md:col-span-8 lg:col-span-9 xl:col-span-10`}
+        >
+          {children}
+        </section>
       </main>
-      <section
-        className={` ${
-          hiddenPath.includes(pathname) ? "mt-0" : "mt-14"
-        } col-span-1 overflow-auto px-8 py-4 md:col-span-8 lg:col-span-9 xl:col-span-10`}
-      >
-        {children}
-      </section>
     </>
   );
 };
