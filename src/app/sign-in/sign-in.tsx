@@ -1,10 +1,11 @@
 import { LucideEye } from "lucide-react";
 import React, { ChangeEvent, FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Inputs } from "../../components/ui/input/input";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { toast } from "sonner";
 import { ValidateSchema } from "../sign-up/sign-up";
+import { useAuth } from "../../context/authContext";
 
 interface ILogin {
   email: string;
@@ -12,7 +13,9 @@ interface ILogin {
 }
 
 const Signin: React.FC = () => {
-  const [login, setLogin] = React.useState<ILogin>({
+  const navigate = useNavigate();
+  const { login } = useAuth()!;
+  const [loginuser, setLogin] = React.useState<ILogin>({
     email: "",
     password: "",
   });
@@ -64,7 +67,6 @@ const Signin: React.FC = () => {
       [name]: value,
     }));
     const checkValidate = validation(name as keyof ILogin, value);
-    console.log(checkValidate);
     setLoginErr((preve) => ({
       ...preve,
       [name]: checkValidate,
@@ -86,8 +88,8 @@ const Signin: React.FC = () => {
 
     const errObj: { [key in keyof ILogin]?: string } = {};
 
-    (Object.keys(login) as (keyof ILogin)[]).forEach((key) => {
-      const errorMessage = validation(key, login[key]);
+    (Object.keys(loginuser) as (keyof ILogin)[]).forEach((key) => {
+      const errorMessage = validation(key, loginuser[key]);
       if (errorMessage) {
         errObj[key] = errorMessage;
       }
@@ -95,14 +97,14 @@ const Signin: React.FC = () => {
 
     if (
       !Object.values(errObj).some((msg) => msg !== "") &&
-      Object.values(login).every((val) => val)
+      Object.values(loginuser).every((val) => val)
     ) {
       try {
         const response = await fetch(
           `${import.meta.env.VITE_API_URL}/users/sign-in`,
           {
             method: "POST",
-            body: JSON.stringify(login),
+            body: JSON.stringify(loginuser),
             headers: {
               "Content-Type": "application/json",
             },
@@ -115,12 +117,10 @@ const Signin: React.FC = () => {
           throw new Error(result.error);
         }
 
-        console.log(result);
-        setLogin({
-          email: "",
-          password: "",
-        });
-        toast.success(result.message);
+        localStorage.setItem("user", JSON.stringify(result.responses));
+        login(result?.responses);
+        toast.success(result?.message);
+        navigate(`/dashboard/${result?.responses?.userId}`);
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error.message);
@@ -163,7 +163,7 @@ const Signin: React.FC = () => {
 
   return (
     <section className="relative isolate">
-      <div className="max-w-full md:max-w-xl mx-auto w-full mt-10  md:px-12 py-0 px-0">
+      <div className="max-w-full md:max-w-xl col-span-10   place-content-center mx-auto w-full mt-10  md:px-12 py-0 px-0">
         <div className="bg-gray-200 dark:bg-gray-800 flex items-center justify-center flex-col rounded-lg px-4 py-14 ">
           <div className="text-center space-y-4">
             <div className="text-center">
@@ -206,7 +206,7 @@ const Signin: React.FC = () => {
                 placeholder="johnDoe@gmail.com"
                 error={(loginErr.email as string) ?? ""}
                 id="email"
-                value={login.email}
+                value={loginuser.email}
                 onChange={handleInputChange}
                 onFocus={handleInputFocus}
                 name="email"
@@ -227,7 +227,7 @@ const Signin: React.FC = () => {
                   error={(loginErr.password as string) ?? ""}
                   id="password"
                   name="password"
-                  value={login.password}
+                  value={loginuser.password}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
                   className="w-full ring-1 ring-gray-500 rounded-md px-3 mt-2 py-2.5 font-poppins leading-5 tracking-wide text-sm"

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Inputs } from "../../components/ui/input/input";
 import { LucideEye, LucideEyeClosed } from "lucide-react";
-import { Link, redirect } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 
@@ -32,6 +32,11 @@ const Signup = () => {
     user_name: "",
     user_type: "",
   });
+  const [verify, setVerify] = React.useState({
+    otp: "",
+    userId: JSON.parse(localStorage.getItem("userId") as string),
+  });
+  const navigate = useNavigate();
   const [userErr, setUserErr] = React.useState<Iuser>({
     email: "",
     password: "",
@@ -39,6 +44,9 @@ const Signup = () => {
     user_type: "",
   });
   const [toggle, setToggle] = React.useState<boolean>(false);
+  const [showModal, setShowModal] = React.useState<null | string | boolean>(
+    (localStorage.getItem("modal") as string) ?? false
+  );
   const togglePassword = () => {
     setToggle((preve) => !preve);
   };
@@ -151,9 +159,13 @@ const Signup = () => {
         if (!response.ok) {
           throw new Error(result.message);
         }
-        redirect("/");
+        localStorage.setItem("userId", JSON.stringify(result.responses?._id));
+        localStorage.setItem("modal", JSON.stringify(true));
+        setShowModal(!showModal);
+        // navigate("/");
         toast.success(result.message);
       } catch (error) {
+        console.log(error);
         if (error instanceof Error) {
           toast.error(error.message);
         }
@@ -178,9 +190,7 @@ const Signup = () => {
         `${import.meta.env.VITE_API_URL}/users/google`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          credentials: "include",
           body: JSON.stringify(idToken),
         }
       );
@@ -196,20 +206,64 @@ const Signup = () => {
       }
     }
   }
+
+  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setVerify((preve) => ({
+      ...preve,
+      [name]: value,
+    }));
+  };
+
+  async function handleVerifyOtpSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const data = {
+      ...verify,
+      userId: JSON.parse(localStorage.getItem("userId") as string),
+    };
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL!}/otps/verifyOtp`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+      localStorage.removeItem("modal");
+      localStorage.removeItem("userId");
+      navigate("/");
+      setShowModal(false);
+      toast.success(result.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    }
+  }
+
   return (
-    <section className="relative isolate">
-      <div className="max-w-full md:max-w-xl mx-auto w-full md:px-12 py-0 px-0">
-        <div className="bg-gray-200 dark:bg-gray-800 flex items-center  justify-center flex-col rounded-lg px-4 py-7 ">
-          <div className="text-center space-y-4">
-            <div className="text-center">
-              <p className="mb-3 text-2xl font-poppins font-semibold leading-5 text-slate-900 dark:text-gray-100">
-                Create your account
-              </p>
-              <p className="mt-2 text-sm leading-4 text-slate-600 dark:text-gray-100">
-                You must be logged in to perform this action.
-              </p>
-            </div>
-            {/* <button
+    <>
+      <section className="relative isolate">
+        <div className="max-w-full md:max-w-xl mx-auto w-full md:px-12 py-0 px-0">
+          <div className="bg-gray-200 dark:bg-gray-800 flex items-center  justify-center flex-col rounded-lg px-4 py-7 ">
+            <div className="text-center space-y-4">
+              <div className="text-center">
+                <p className="mb-3 text-2xl font-poppins font-semibold leading-5 text-slate-900 dark:text-gray-100">
+                  Create your account
+                </p>
+                <p className="mt-2 text-sm leading-4 text-slate-600 dark:text-gray-100">
+                  You must be logged in to perform this action.
+                </p>
+              </div>
+              {/* <button
               type="button"
               onClick={handleAuthWithGoogle}
               className="inline-flex h-10 w-full items-center cursor-pointer justify-center gap-2 rounded border border-slate-300 bg-white p-2 text-sm font-medium mb-2 text-black outline-none focus:ring-2 focus:ring-[#333] focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
@@ -221,142 +275,234 @@ const Signup = () => {
               />
               Continue with Google
             </button> */}
-            <div className="mb-2">
-              <GoogleLogin
-                onSuccess={handleAuthWithGoogle}
-                onError={handleGoogleAuthErro}
-              />
+              <div className="mb-2">
+                <GoogleLogin
+                  onSuccess={handleAuthWithGoogle}
+                  onError={handleGoogleAuthErro}
+                />
+              </div>
             </div>
-          </div>
-          <form
-            className="space-y-3 w-full  mx-auto max-w-sm"
-            noValidate
-            autoComplete="off"
-            onSubmit={submit}
-          >
-            <div className="w-full">
-              <label
-                htmlFor="user_name"
-                className="font-poppins leading-6 tracking-wider text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 after:font-bold after:text-red-500"
-              >
-                Username
-              </label>
-              <Inputs
-                type="text"
-                placeholder="john Doe"
-                error={(userErr.user_name as string) ?? ""}
-                id="user_name"
-                name="user_name"
-                value={user.user_name}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                className="w-full ring-1 ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
-              />
-            </div>
-
-            <div className="w-full">
-              <label
-                htmlFor="user_type"
-                className="font-poppins leading-6 tracking-wider text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 after:font-bold after:text-red-500"
-              >
-                User type
-              </label>
-              <select
-                id="user_type"
-                name="user_type"
-                value={user.user_type}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                className="w-full ring-1 dark:bg-gray-800 bg-gray-50 capitalize ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
-              >
-                <option value="" hidden>
-                  --Select User Type--
-                </option>
-                {["admin", "user"].map((item) => (
-                  <option value={item} key={item} className="w-full capitalize">
-                    {item.toString()}
-                  </option>
-                ))}
-              </select>
-              {userErr.user_type && (
-                <span className="font-poppins leading-6 tracking-wide text-xs text-red-500 block text-start">
-                  {userErr.user_type}
-                </span>
-              )}
-            </div>
-            <div className="w-full">
-              <label
-                htmlFor="email"
-                className="font-poppins leading-6 tracking-wider text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 after:font-bold after:text-red-500"
-              >
-                Email
-              </label>
-              <Inputs
-                type="text"
-                placeholder="johnDoe@gmail.com"
-                error={(userErr.email as string) ?? ""}
-                id="email"
-                name="email"
-                value={user.email}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                className="w-full ring-1 ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
-              />
-            </div>
-            <div className="w-full">
-              <label
-                htmlFor="password"
-                className="font-poppins leading-6  text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 capitalize tracking-wider after:font-bold after:text-red-500"
-              >
-                password
-              </label>
-              <div className="relative">
+            <form
+              className="space-y-3 w-full  mx-auto max-w-sm"
+              noValidate
+              autoComplete="off"
+              onSubmit={submit}
+            >
+              <div className="w-full">
+                <label
+                  htmlFor="user_name"
+                  className="font-poppins leading-6 tracking-wider text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 after:font-bold after:text-red-500"
+                >
+                  Username
+                </label>
                 <Inputs
-                  type={toggle ? "text" : "password"}
-                  placeholder="******"
-                  error={(userErr.password as string) ?? ""}
-                  id="password"
-                  name="password"
-                  value={user.password}
+                  type="text"
+                  placeholder="john Doe"
+                  error={(userErr.user_name as string) ?? ""}
+                  id="user_name"
+                  name="user_name"
+                  value={user.user_name}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
                   className="w-full ring-1 ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
                 />
-                <div className="absolute z-50 inset-y-0 top-1 -translate-y-0 right-1">
-                  <button
-                    type="button"
-                    onClick={togglePassword}
-                    className="cursor-pointer p-2"
-                  >
-                    {toggle ? (
-                      <LucideEye className="size-5" />
-                    ) : (
-                      <LucideEyeClosed className="size-5" />
-                    )}
-                  </button>
+              </div>
+
+              <div className="w-full">
+                <label
+                  htmlFor="user_type"
+                  className="font-poppins leading-6 tracking-wider text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 after:font-bold after:text-red-500"
+                >
+                  User type
+                </label>
+                <select
+                  id="user_type"
+                  name="user_type"
+                  value={user.user_type}
+                  onChange={handleInputChange}
+                  onFocus={handleInputFocus}
+                  className="w-full ring-1 dark:bg-gray-800 bg-gray-50 capitalize ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
+                >
+                  <option value="" hidden>
+                    --Select User Type--
+                  </option>
+                  {["admin", "user"].map((item) => (
+                    <option
+                      value={item}
+                      key={item}
+                      className="w-full capitalize"
+                    >
+                      {item.toString()}
+                    </option>
+                  ))}
+                </select>
+                {userErr.user_type && (
+                  <span className="font-poppins leading-6 tracking-wide text-xs text-red-500 block text-start">
+                    {userErr.user_type}
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <label
+                  htmlFor="email"
+                  className="font-poppins leading-6 tracking-wider text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 after:font-bold after:text-red-500"
+                >
+                  Email
+                </label>
+                <Inputs
+                  type="text"
+                  placeholder="johnDoe@gmail.com"
+                  error={(userErr.email as string) ?? ""}
+                  id="email"
+                  name="email"
+                  value={user.email}
+                  onChange={handleInputChange}
+                  onFocus={handleInputFocus}
+                  className="w-full ring-1 ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
+                />
+              </div>
+              <div className="w-full">
+                <label
+                  htmlFor="password"
+                  className="font-poppins leading-6  text-sm font-medium text-black dark:text-white focus:outline-none placeholder:text-gray-500 placeholder:text-xs focus:placeholder:hidden transition-all duration-300 ease-in-out after:content-['*'] after:ml-1 capitalize tracking-wider after:font-bold after:text-red-500"
+                >
+                  password
+                </label>
+                <div className="relative">
+                  <Inputs
+                    type={toggle ? "text" : "password"}
+                    placeholder="******"
+                    error={(userErr.password as string) ?? ""}
+                    id="password"
+                    name="password"
+                    value={user.password}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    className="w-full ring-1 ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
+                  />
+                  <div className="absolute z-50 inset-y-0 top-1 -translate-y-0 right-1">
+                    <button
+                      type="button"
+                      onClick={togglePassword}
+                      className="cursor-pointer p-2"
+                    >
+                      {toggle ? (
+                        <LucideEye className="size-5" />
+                      ) : (
+                        <LucideEyeClosed className="size-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="w-full">
-              <button
-                className="w-full rounded-md bg-black dark:text-black font-semibold dark:bg-white disabled:hover:cursor-not-allowed text-white hover:text-black hover:bg-transparent hover:ring-1 hover:ring-black transition-colors ease-in-out duration-500 text-sm font-poppins px-3 py-2.5"
-                name="Sign up"
-                type="submit"
-              >
-                Sign up
-              </button>
-            </div>
-          </form>
-          <p className="text-xs mt-1.5 font-normal text-center font-poppins leading-6 tracking-wide">
-            Already have a account?{" "}
-            <Link to={"/"} className="underline font-poppins text-sm">
-              Sing in.
-            </Link>
-          </p>
+              <div className="w-full">
+                <button
+                  className="w-full rounded-md cursor-pointer bg-black dark:text-black font-semibold dark:bg-white disabled:hover:cursor-not-allowed text-white hover:text-black hover:bg-transparent hover:ring-1 hover:ring-black transition-colors ease-in-out duration-500 text-sm font-poppins px-3 py-2.5"
+                  name="Sign up"
+                  type="submit"
+                >
+                  Sign up
+                </button>
+              </div>
+            </form>
+            <p className="text-xs mt-1.5 font-normal text-center font-poppins leading-6 tracking-wide">
+              Already have a account?{" "}
+              <Link to={"/"} className="underline font-poppins text-sm">
+                Sing in.
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {showModal && (
+        <div className="fixed inset-0 z-40 min-h-full overflow-y-auto overflow-x-hidden transition flex items-center">
+          {/* <!-- overlay --> */}
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 w-full h-full bg-black/50 cursor-pointer"
+          ></div>
+
+          {/* <!-- Modal --> */}
+          <div className="relative w-full cursor-pointer pointer-events-none transition my-auto p-4">
+            <div className="w-full py-2 bg-white cursor-default pointer-events-auto dark:bg-gray-800 relative rounded-xl mx-auto max-w-sm">
+              <button
+                tabIndex={1}
+                type="button"
+                className="absolute top-2 right-2 rtl:right-auto rtl:left-2"
+              >
+                <svg
+                  xlinkTitle="Close"
+                  tabIndex={2}
+                  className="h-4 w-4 cursor-pointer text-gray-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                <span className="sr-only">Close</span>
+              </button>
+
+              <div className="space-y-2 p-2 border-b">
+                <div className="p-2 space-y-2 text-center dark:text-white">
+                  <h2
+                    className="text-xl font-bold tracking-tight"
+                    id="page-action.heading"
+                  >
+                    Verify your email address.
+                  </h2>
+
+                  <p className="text-gray-500">
+                    Please find the six digits otp in your email address.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <form
+                  noValidate
+                  className="px-4 py-4"
+                  onSubmit={handleVerifyOtpSubmit}
+                >
+                  <Inputs
+                    type="number"
+                    name="otp"
+                    id="otp"
+                    value={verify.otp}
+                    onChange={handleOtpChange}
+                    placeholder="OTP"
+                    className="w-full ring-1 ring-gray-500 rounded-md px-3 mt-1 py-2.5 font-poppins leading-5 tracking-wide text-sm"
+                  />
+                  <div className="px-6 py-2">
+                    <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(0,1fr))]">
+                      <button
+                        type="submit"
+                        className="inline-flex items-center justify-center py-1 gap-1 font-medium rounded-lg border transition-colors outline-none focus:ring-offset-2 focus:ring-2 focus:ring-inset dark:focus:ring-offset-0 min-h-[2.25rem] px-4 text-sm text-white shadow focus:ring-white border-transparent bg-red-600 hover:bg-red-500 focus:bg-red-700 focus:ring-offset-red-700"
+                      >
+                        <span className="flex items-center gap-1">
+                          <span className="">Verify</span>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+                {/* <div
+                  aria-hidden="true"
+                  className="border-t dark:border-gray-700 px-2"
+                ></div> */}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

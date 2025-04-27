@@ -14,16 +14,28 @@ import { Toaster } from "./components/ui/toaster/toast";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import ProdectedRoute from "./hooks/use-protect-route";
 import { Dashboard } from "./app/dashboard/dashboard";
+import { AuthProvider } from "./provider/authProvider";
+import PageNotFount from "./app/not-fount-page/page-not-fount";
+import AnalyticsReports from "./app/analytics-&-reports/analytics-reports";
+import Packages from "./app/packages/packages";
+import { BookingProvider } from "./provider/bookingProvider";
+import { PackageProvider } from "./provider/packageProvider";
 
 function AppRooter() {
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID!}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-theme">
-        <Layout>
-          <Outlet />
-        </Layout>
-      </ThemeProvider>
-    </GoogleOAuthProvider>
+    <AuthProvider>
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID!}>
+        <BookingProvider>
+          <PackageProvider>
+            <ThemeProvider defaultTheme="dark" storageKey="vite-theme">
+              <Layout>
+                <Outlet />
+              </Layout>
+            </ThemeProvider>
+          </PackageProvider>
+        </BookingProvider>
+      </GoogleOAuthProvider>
+    </AuthProvider>
   );
 }
 
@@ -32,10 +44,13 @@ const rootRouter = createBrowserRouter(
     <Route element={<AppRooter />}>
       <Route element={<ProdectedRoute allowedRole={["admin"]} />}>
         <Route path="/dashboard/:id" element={<Dashboard />} />
+        <Route path="/analytics-reports/:id" element={<AnalyticsReports />} />
+        <Route path="/packages/:id" element={<Packages />} />
       </Route>
 
       <Route path="/sign-up" element={<Signup />} />
       <Route path="/" element={<Signin />} />
+      <Route path="*" element={<PageNotFount />} />
     </Route>
   )
 );
@@ -44,7 +59,7 @@ function App() {
   return (
     <>
       <RouterProvider router={rootRouter} />
-      <Toaster position="bottom-right" duration={2} theme="system" />
+      <Toaster position="bottom-right" theme="system" />
     </>
   );
 }
