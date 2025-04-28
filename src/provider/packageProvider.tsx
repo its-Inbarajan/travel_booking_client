@@ -30,6 +30,7 @@ export const PackageProvider = ({ children }: { children: JSX.Element }) => {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: "include",
           }
         );
         const result = await response.json();

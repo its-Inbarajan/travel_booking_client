@@ -16,6 +16,7 @@ export const BookingProvider = ({ children }: { children: JSX.Element }) => {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: "include",
           }
         );
 
@@ -46,6 +47,7 @@ export const BookingProvider = ({ children }: { children: JSX.Element }) => {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 
@@ -57,10 +59,9 @@ export const BookingProvider = ({ children }: { children: JSX.Element }) => {
       // setData([...data, result])
       toast.success(result.message);
     } catch (error) {
-      // if (error instanceof Error) {
-      //   console.log(error.message);
-      // }
-      console.log(error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
     }
   }
 
