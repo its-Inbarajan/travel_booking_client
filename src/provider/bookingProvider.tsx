@@ -27,9 +27,10 @@ export const BookingProvider = ({ children }: { children: JSX.Element }) => {
         setData(result?.responses?.data);
         setCount(result?.responses.count);
       } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message);
-        }
+        // if (error instanceof Error) {
+        //   toast.error(error.message);
+        // }
+        console.log(error);
       }
     }
     getBookings();
@@ -56,9 +57,10 @@ export const BookingProvider = ({ children }: { children: JSX.Element }) => {
       // setData([...data, result])
       toast.success(result.message);
     } catch (error) {
-      if (error instanceof Error) {
-        console.log(error.message);
-      }
+      // if (error instanceof Error) {
+      //   console.log(error.message);
+      // }
+      console.log(error);
     }
   }
 
