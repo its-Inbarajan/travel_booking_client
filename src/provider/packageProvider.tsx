@@ -4,7 +4,6 @@ import {
   PackageContext,
   Pagination,
 } from "../context/packagesContext";
-import { toast } from "sonner";
 
 export const PackageProvider = ({ children }: { children: JSX.Element }) => {
   const [packages, setPackage] = React.useState<Package[]>([]);
@@ -42,7 +41,8 @@ export const PackageProvider = ({ children }: { children: JSX.Element }) => {
         setPagination(result.pagination);
       } catch (error) {
         if (error instanceof Error) {
-          toast.error(error.message);
+          // toast.error(error.message);
+          console.log(error.message);
         }
       }
     }

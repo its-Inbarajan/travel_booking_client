@@ -57,7 +57,7 @@ export const BookingProvider = ({ children }: { children: JSX.Element }) => {
       toast.success(result.message);
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(error.message);
+        console.log(error.message);
       }
     }
   }
