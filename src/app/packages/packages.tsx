@@ -35,8 +35,8 @@ const Packages = () => {
   const getById = React.useCallback(async (id: string) => {
     try {
       const response = await fetch(
-        // `${import.meta.env.VITE_API_URL!}/package/getById/${id}`,
-        `http://localhost:4000/api/v1/package/getById/${id}`,
+        `${import.meta.env.VITE_API_URL!}/package/getById/${id}`,
+        // `http://localhost:4000/api/v1/package/getById/${id}`,
         {
           method: "GET",
           credentials: "include",
