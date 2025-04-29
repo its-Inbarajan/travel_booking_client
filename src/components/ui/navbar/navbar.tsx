@@ -10,7 +10,7 @@ const Navbar = () => {
     setToggle((preve) => !preve);
   };
   const { logout, user } = useAuth();
-  const { setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
 
   const handlelogout = () => {
     logout();
@@ -29,19 +29,25 @@ const Navbar = () => {
         </Link>
 
         <div className="flex gap-3 relative items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-          <div role="radiogroup" className="theme-switcher">
+          <div
+            role="radiogroup"
+            className=" w-fit flex gap-4 px- rounded-full ring-1"
+          >
             <button
               type="button"
               role="radio"
               data-theme-switcher="true"
               data-active="false"
-              className="theme-switcher_switch"
+              className={`${
+                theme === "light" && "bg-gray-500 rounded-full "
+              } w-10 h-10  flex justify-center  cursor-pointer items-center`}
+              // className="theme-switcher_switch"
               aria-label="Switch to light theme"
               aria-checked="false"
               onClick={() => setTheme("light")}
             >
               <svg
-                style={{ color: "currentcolor", width: "16px", height: "16px" }}
+                // style={{ color: "currentcolor", width: "16px", height: "16px" }}
                 width="24"
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
@@ -52,7 +58,7 @@ const Navbar = () => {
                 height="24"
                 fill="none"
                 data-testid="geist-icon"
-                className="icon"
+                className="size-5"
               >
                 <circle r="5" cy="12" cx="12"></circle>
                 <path d="M12 1v2"></path>
@@ -70,13 +76,16 @@ const Navbar = () => {
               role="radio"
               data-theme-switcher="true"
               data-active="false"
-              className="theme-switcher_switch"
+              className={`w-10 h-10  ${
+                theme === "system" &&
+                "dark:bg-gray-50 bg-gray-300 dark:text-gray-900 text-black rounded-full"
+              } flex justify-center items-center cursor-pointer`}
               aria-label="Switch to system theme"
               aria-checked="false"
               onClick={() => setTheme("system")}
             >
               <svg
-                style={{ color: "currentcolor", width: "16px", height: "16px" }}
+                // style={{ color: "currentcolor", width: "16px", height: "16px" }}
                 width="24"
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
@@ -87,7 +96,7 @@ const Navbar = () => {
                 height="24"
                 fill="none"
                 data-testid="geist-icon"
-                className="icon"
+                className="size-5"
               >
                 <rect ry="2" rx="2" height="14" width="20" y="3" x="2"></rect>
                 <path d="M8 21h8"></path>
@@ -99,13 +108,16 @@ const Navbar = () => {
               role="radio"
               data-theme-switcher="true"
               data-active="true"
-              className="theme-switcher_switch"
+              // className="theme-switcher_switch"
+              className={`w-10 h-10  ${
+                theme === "dark" && "bg-gray-50 text-black rounded-full"
+              } flex justify-center items-center rounded cursor-pointer`}
               aria-label="Switch to dark theme"
               aria-checked="true"
               onClick={() => setTheme("dark")}
             >
               <svg
-                style={{ color: "currentcolor", width: "16px", height: "16px" }}
+                // style={{ color: "currentcolor", width: "16px", height: "16px" }}
                 width="24"
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
@@ -116,7 +128,7 @@ const Navbar = () => {
                 height="24"
                 fill="none"
                 data-testid="geist-icon"
-                className="icon"
+                className="size-5"
               >
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
               </svg>
@@ -126,7 +138,7 @@ const Navbar = () => {
           <button
             type="button"
             onClick={handleDropToggle}
-            className="flex text-sm bg-gray-800 cursor-pointer rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+            className="flex text-sm dark:bg-white bg-gray-800 cursor-pointer rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
             id="user-menu-button"
             aria-expanded="false"
             data-dropdown-toggle="user-dropdown"
@@ -134,7 +146,7 @@ const Navbar = () => {
           >
             <span className="sr-only">Open user menu</span>
             {user?.user_name && (
-              <div className="h-10 w-10 rounded-full flex items-center justify-center capitalize text-base">
+              <div className="h-10 w-10 rounded-full dark:text-black text-white flex items-center justify-center capitalize text-base">
                 {user?.user_name?.toString()[0] ?? "T"}
               </div>
             )}

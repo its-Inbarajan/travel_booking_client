@@ -425,7 +425,7 @@ const Signup = () => {
           ></div>
 
           {/* <!-- Modal --> */}
-          <div className="relative w-full cursor-pointer pointer-events-none transition my-auto p-4">
+          <div className="relative w-full transition my-auto p-4">
             <div className="w-full py-2 bg-white cursor-default pointer-events-auto dark:bg-gray-800 relative rounded-xl mx-auto max-w-sm">
               <button
                 tabIndex={1}
